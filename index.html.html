@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mouse Adventure Academy 2.0</title>
+<style>
+body{margin:0;font-family:Tahoma,sans-serif;background:linear-gradient(#bde8ff,#fff4c9);text-align:center}
+h1{color:#ff4f8b}
+#menu{padding:20px}
+.card{background:white;max-width:800px;margin:auto;padding:20px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+button{padding:12px 20px;margin:6px;border:none;border-radius:12px;background:#4dabf7;color:white;font-size:20px;cursor:pointer}
+#game,#result{display:none}
+#top{display:flex;justify-content:space-around;background:white;padding:10px}
+#area{height:75vh;position:relative}
+.item{position:absolute;font-size:60px;cursor:pointer;user-select:none}
+#task{font-size:28px;font-weight:bold;padding:10px}
+#progress{width:300px;height:18px;background:#ddd;border-radius:20px;overflow:hidden}
+#bar{height:100%;width:0;background:#00c853}
+.drag{font-size:60px;position:absolute;cursor:grab}
+.drop{position:absolute;width:130px;height:130px;border:4px dashed green;border-radius:15px;line-height:130px;font-size:60px;background:#fff}
+</style>
+</head>
+<body>
+
+<div id="menu">
+<h1>🎮 Mouse Adventure Academy 2.0</h1>
+<div class="card">
+<h3>👩‍🏫 ผู้พัฒนาสื่อการเรียนรู้</h3>
+<h2>นางสาววิภาพร ป้อมกระโทก</h2>
+<p>ครู วิทยฐานะครูชำนาญการ</p>
+<p><b>โรงเรียนวัดเกาะสุวรรณาราม</b></p>
+<p>เลือกทักษะที่ต้องการฝึก</p>
+</div><br>
+<button onclick="start('click')">⭐ คลิกซ้าย</button>
+<button onclick="start('double')">📦 ดับเบิลคลิก</button>
+<button onclick="start('right')">💎 คลิกขวา</button>
+<button onclick="start('drag')">🔑 ลากและวาง</button>
+</div>
+
+<div id="game">
+<div id="top">
+<div>🪙 <span id="coins">0</span></div>
+<div id="progress"><div id="bar"></div></div>
+</div>
+<div id="task"></div>
+<div id="area"></div>
+</div>
+
+<div id="result">
+<h1>🏆 ผ่านด่านแล้ว</h1>
+<h2>เก่งมาก!</h2>
+<button onclick="location.reload()">กลับหน้าแรก</button>
+</div>
+
+<script>
+const area=document.getElementById("area");
+const task=document.getElementById("task");
+
+const clickItems=["🍎","🍌","🍇","🍉","🐶","🐱","🐰","🐻"];
+const doubleItems=["🎁","📚","⚽","🎨","🎮","🧸"];
+const rightItems=["🦋","🐠","🐝","🌈","🌸","☁️"];
+
+const dragPairs=[
+["🍎","🧺"],["📚","🗄️"],["🚗","🏠"],["🐟","🪣"],["🧸","📦"],
+["✏️","🎒"],["🌸","🏺"],["🍌","🧺"],["⚽","🥅"],["🎁","🎄"]
+];
+
+let mode="",score=0,coins=0,current="";
+
+function update(){
+document.getElementById("coins").innerText=coins;
+document.getElementById("bar").style.width=(score*10)+"%";
+if(score>=10){
+document.getElementById("game").style.display="none";
+document.getElementById("result").style.display="block";
+}
+}
+
+function start(m){
+mode=m;score=0;coins=0;
+menu.style.display="none";
+game.style.display="block";
+nextQuestion();
+}
+
+function rand(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+function clearArea(){area.innerHTML=""}
+
+function nextQuestion(){
+clearArea();
+
+if(mode==="click"){
+current=rand(clickItems);
+task.innerHTML="⭐ คลิกที่ "+current;
+createObjects(clickItems, "click");
+}
+
+if(mode==="double"){
+current=rand(doubleItems);
+task.innerHTML="📦 ดับเบิลคลิกที่ "+current;
+createObjects(doubleItems,"double");
+}
+
+if(mode==="right"){
+current=rand(rightItems);
+task.innerHTML="💎 คลิกขวาที่ "+current;
+createObjects(rightItems,"right");
+}
+
+if(mode==="drag"){
+let pair=dragPairs[score];
+task.innerHTML="🔑 ลาก "+pair[0]+" ไปหา "+pair[1];
+
+let drag=document.createElement("div");
+drag.className="drag";
+drag.innerHTML=pair[0];
+drag.draggable=true;
+drag.style.left="100px";
+drag.style.top="200px";
+
+let drop=document.createElement("div");
+drop.className="drop";
+drop.innerHTML=pair[1];
+drop.style.right="100px";
+drop.style.top="180px";
+
+drag.addEventListener("dragstart",e=>{
+e.dataTransfer.setData("ok","1");
+});
+
+drop.addEventListener("dragover",e=>e.preventDefault());
+
+drop.addEventListener("drop",e=>{
+e.preventDefault();
+score++;
+coins+=10;
+update();
+if(score<10) nextQuestion();
+});
+
+area.appendChild(drag);
+area.appendChild(drop);
+}
+}
+
+function createObjects(source,type){
+
+let items=[...source];
+
+while(items.length<12){
+items.push(rand(source));
+}
+
+items.sort(()=>Math.random()-0.5);
+
+items.forEach(x=>{
+
+let d=document.createElement("div");
+d.className="item";
+d.innerHTML=x;
+
+d.style.left=Math.random()*(window.innerWidth-80)+"px";
+d.style.top=Math.random()*450+"px";
+
+if(type==="click"){
+d.onclick=()=>{
+if(x===current){
+score++;coins+=5;update();
+if(score<10) nextQuestion();
+}
+};
+}
+
+if(type==="double"){
+d.ondblclick=()=>{
+if(x===current){
+score++;coins+=10;update();
+if(score<10) nextQuestion();
+}
+};
+}
+
+if(type==="right"){
+d.oncontextmenu=(e)=>{
+e.preventDefault();
+if(x===current){
+score++;coins+=10;update();
+if(score<10) nextQuestion();
+}
+};
+}
+
+area.appendChild(d);
+
+});
+}
+</script>
+</body>
+</html>
